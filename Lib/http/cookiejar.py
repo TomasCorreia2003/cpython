@@ -657,17 +657,23 @@ def request_path(request):
 
 def request_port(request):
     host = request.host
-    i = host.find(':')
-    if i >= 0:
-        port = host[i+1:]
-        try:
-            int(port)
-        except ValueError:
-            _debug("nonnumeric port: '%s'", port)
-            return None
+
+    # Handle IPv6 literal [::1]:port
+    if host.startswith('['):
+        i = host.rfind(']')
+        if i != -1 and i + 1 < len(host) and host[i + 1] == ':':
+            port = host[i + 2:]
+        else:
+            port = DEFAULT_HTTP_PORT
     else:
-        port = DEFAULT_HTTP_PORT
+        i = host.find(':')
+        if i >= 0:
+            port = host[i + 1:]
+        else:
+            port = DEFAULT_HTTP_PORT
+
     return port
+
 
 # Characters in addition to A-Z, a-z, 0-9, '_', '.', and '-' that don't
 # need to be escaped to form a valid HTTP URL (RFCs 2396 and 1738).
